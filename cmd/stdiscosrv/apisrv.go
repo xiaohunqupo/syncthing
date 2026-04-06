@@ -564,5 +564,17 @@ func (t *retryAfterTracker) retryAfterS() int {
 	}
 	t.curCount++
 	t.mut.Unlock()
-	return t.currentDelay + rand.Intn(t.currentDelay/4)
+
+	// Skewed normal distribution with the mean at currentDelay and the
+	// limits (50% and 150%) at 3 standard deviations
+	nf := rand.NormFloat64()
+	minD := max(notFoundRetryUnknownMinSeconds, t.currentDelay/2)
+	maxD := min(notFoundRetryUnknownMaxSeconds, t.currentDelay*3/2)
+	intv := float64(maxD - t.currentDelay)
+	if nf < 0 {
+		intv = float64(t.currentDelay - minD)
+	}
+	nf = min(max(nf*intv/3+float64(t.currentDelay), notFoundRetryUnknownMinSeconds), notFoundRetryUnknownMaxSeconds)
+
+	return int(nf)
 }
