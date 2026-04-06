@@ -67,7 +67,7 @@ type contextKey int
 
 const idKey contextKey = iota
 
-func newAPISrv(addr string, cert tls.Certificate, db database, repl replicator, useHTTP, compression bool, desiredNotFoundRate float64) *apiSrv {
+func newAPISrv(addr string, cert tls.Certificate, db database, repl replicator, useHTTP, compression bool, desiredUnseenNotFoundRate, desiredSeenNotFoundRate float64) *apiSrv {
 	return &apiSrv{
 		addr:        addr,
 		cert:        cert,
@@ -78,13 +78,13 @@ func newAPISrv(addr string, cert tls.Certificate, db database, repl replicator, 
 		seenTracker: &retryAfterTracker{
 			name:         "seenTracker",
 			bucketStarts: time.Now(),
-			desiredRate:  desiredNotFoundRate / 2,
+			desiredRate:  desiredSeenNotFoundRate,
 			currentDelay: notFoundRetryUnknownMinSeconds,
 		},
 		notSeenTracker: &retryAfterTracker{
 			name:         "notSeenTracker",
 			bucketStarts: time.Now(),
-			desiredRate:  desiredNotFoundRate / 2,
+			desiredRate:  desiredUnseenNotFoundRate,
 			currentDelay: notFoundRetryUnknownMaxSeconds / 2,
 		},
 	}
