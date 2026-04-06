@@ -66,6 +66,8 @@ type CLI struct {
 	DesiredUnseenNotFoundRate float64 `group:"Listen" help:"Desired maximum rate of not-found replies for never seen devices (/s)" default:"1000" env:"DISCOVERY_UNSEEN_RATE"`
 	DesiredSeenNotFoundRate   float64 `group:"Listen" help:"Desired maximum rate of not-found replies for previously seen devices (/s)" default:"1000" env:"DISCOVERY_SEEN_RATE"`
 
+	ShutdownDelay float64 `help:"Time to wait before shutdown after receiving a shutdown signal (s)" env:"DISCOVERY_SHUTDOWN_DELAY"`
+
 	DBDir           string        `group:"Database" help:"Database directory" default:"." env:"DISCOVERY_DB_DIR"`
 	DBFlushInterval time.Duration `group:"Database" help:"Interval between database flushes" default:"5m" env:"DISCOVERY_DB_FLUSH_INTERVAL"`
 
@@ -168,7 +170,8 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt)
 	go func() {
 		sig := <-signalChan
-		slog.Info("Received signal; shutting down", "signal", sig)
+		slog.Info("Received signal; shutting down", "signal", sig, "delay", cli.ShutdownDelay)
+		time.Sleep(time.Duration(float64(time.Second) * cli.ShutdownDelay))
 		cancel()
 	}()
 
